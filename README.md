@@ -64,28 +64,70 @@ All models are trainable and deployable directly from the Streamlit interface, i
 ## 📂 Project Structure
 
 ```plaintext
-📁 backend/
-  ├── recommendation_models.py         # Core recommendation logic
-  ├── retrain_NCF.py                   # GitHub Actions: retrain script
-  └── supabase_utils.py                # Supabase interaction layer
-
-📁 .github/workflows/
-  └── retrain_ncf.yml                  # Auto-training with GitHub Actions (Daily 6:30 PM IST)
-
-📁 frontend/
-  └── streamlit_app.py                 # UI interface built with Streamlit
-
-📁 assets/
-  ├── eda.png                          # Exploratory Data Analysis
-  ├── course_similarity_heatmap.png   # Cosine similarity between courses
-  ├── kmeans_elbow.png                # Optimal clusters in user data
-  ├── regression_tuning.png           # Hyperparameter tuning (Regression)
-  ├── classification_tuning.png       # Hyperparameter tuning (Classification)
-
-📄 requirements.txt
-📄 .env.example
-📄 README.md
+course-recommender/
+├── backend/ # 🔁 Core recommendation logic
+│ ├── init.py # Package initializer
+│ ├── models.py # All model training & prediction implementations
+│ ├── utils.py # Helper functions and shared utilities
+│ └── supabase_client.py # 🔌 Supabase client setup and API interactions
+│
+├── data/ # 📊 Sample datasets (used for offline testing)
+│ ├── course_info.csv
+│ ├── ratings.csv
+│ └── course_genres.csv
+│
+├── frontend/ # 💻 Streamlit UI code
+│ ├── app.py # Main application entry point (Streamlit)
+│ ├── assets/ # Static images & visualizations
+│ │ ├── eda.png
+│ │ ├── elbow_curve.png
+│ │ └── ...
+│ └── components/ # Reusable Streamlit UI components (optional)
+│
+├── workflows/ # ⚙️ GitHub Actions for CI/CD
+│ └── retrain_ncf.yml # Scheduled job to retrain NCF model daily
+│
+├── .env.example # 🔐 Example environment variables (copy as .env)
+│ # SUPABASE_URL, SUPABASE_KEY go here
+├── requirements.txt # 📦 Python dependencies
+└── README.md # 📝 Project documentation
 ```
+## 🗂️ Supabase Project Structure
+
+Supabase is used for both **database** and **file storage** in this project. Here's how your Supabase backend is organized:
+
+---
+
+### 🔸 1. Supabase Tables (PostgreSQL)
+
+
+These tables store the core data for user interactions, course metadata, and model tracking.
+
+| Table Name           | Columns                                                                 | Purpose                                                       |
+|----------------------|-------------------------------------------------------------------------|---------------------------------------------------------------|
+| `Ratings`            | `user`, `item`, `rating`                                                | Stores user-course rating data (explicit feedback)            |
+| `Course_Info`        | `COURSE_ID`, `TITLE`, `DESCRIPTION`, ...                                | Metadata for all available courses                            |
+| `Course_BOW`         | `doc_id`, `doc_index`, `token`, `bow`                                   | Bag-of-Words representation for each course                   |
+| `Course Genres`      | `COURSE_ID`, `GENRE_1`, `GENRE_2`, ..., `GENRE_N`                        | Genre encoding for each course (used for content profiling)   |
+| `User_Model_Map`     | `userid`, `model`                                                       | Keeps track of which models a user has trained or used        |
+
+---
+
+### 🔸 2. Supabase Storage Buckets
+
+Used to upload, store, and download serialized models and other large files.
+
+| Bucket Name                  | Files Inside                                                  | Purpose                                     |
+|------------------------------|---------------------------------------------------------------|---------------------------------------------|
+| `course-recommendation-models` | `course_similarity_model.xz`<br>`user_profile_matrix.xz`<br>`ncf_model.xz`<br>`kMeans_model.xz`<br>`regression_emb_model.xz` | Stores all trained ML models (Pickle + LZMA) |
+
+Each model file is uploaded or updated after training:
+```python
+supabase.storage.from_("course-recommendation-models").upload(file_name, file)
+
+
+```
+
 ## 📸 Screenshots
 
 | EDA & Similarity Heatmap | KMeans Elbow | Model Results |
