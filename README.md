@@ -51,13 +51,38 @@ All models are trainable and deployable directly from the Streamlit interface, i
 
 ## 🚀 How It Works
 
-1. **User selects or enters their ID**
-2. **Model training**:
-   - Streamlit triggers model training via backend logic
-   - Models saved in Supabase bucket as `.xz` compressed pickle files
-3. **Prediction phase**:
-   - Trained models are loaded from storage
-   - Personalized recommendations generated and displayed with confidence scores
+1. **User Identification**
+
+   * A user either selects **“New”** or enters their **existing User ID** via the Streamlit sidebar.
+   * For **new users**, selected completed courses are pushed to the `Ratings` table in Supabase.
+
+2. **Model Training Phase**
+
+   * Streamlit triggers the selected model training using backend logic.
+   * During training:
+
+     * The UI displays **live runtime updates** (⏱️ in minutes and seconds).
+     * For embedding-based models, custom user/item features are learned using neural layers.
+   * Once training is complete:
+
+     * The trained model (e.g., RandomForest, KMeans, NCF) is serialized and saved as a `.xz` compressed pickle file.
+     * The model file is uploaded or updated in the **Supabase Storage bucket**.
+     * A record is added to the `User_Model_Map` table to track which model was trained by that user.
+
+3. **Retraining Logic**
+
+   * If an **existing user** adds more completed courses:
+
+     * New course ratings are inserted into `Ratings`.
+     * All previous models for that user are **deleted from `User_Model_Map`** to ensure retraining on fresh data.
+
+4. **Prediction Phase**
+
+   * When a trained model is selected:
+
+     * It is fetched from Supabase Storage.
+     * The model uses current ratings and embeddings to generate personalized course recommendations.
+     * Results are displayed in a ranked list, optionally with confidence scores or similarity percentages.
 
 ---
 
@@ -146,8 +171,38 @@ Each trained model is uploaded to Supabase for existing users, and automatically
 ```python
 supabase.storage.from_("course-recommendation-models").upload(file_name, file)
 
-
 ```
+---
+
+## 🧊 Cold Start Handling (NCF)
+
+In Neural Collaborative Filtering (NCF), the **cold start problem** refers to the challenge of making recommendations for users who were **not present during model training**.
+
+To handle this efficiently, an **hybrid strategy** combining similarity-based inference and scheduled model retraining is adopted:
+
+### 🔁 Strategy
+
+1. **Check if the user was trained**:
+   - If the user exists in the training data, we use the NCF model directly to predict recommendations.
+
+2. **If the user is new**:
+   - We collect completed courses from the user.
+   - Calculate **cosine similarity** between the new user and trained users based on course completion.
+   - Select the top K similar users (e.g., 5).
+
+3. **Generate recommendations**:
+   - Fetch predictions for those similar users using the NCF model.
+   - Weight the predicted scores based on similarity to the new user.
+   - Filter out any courses the new user has already completed.
+   - Scale scores between **0–100** for interpretability.
+
+### 🛠 Why?
+
+- **Training the NCF model is expensive and slow**, especially when users update their history frequently.
+- This cold-start mechanism gives **real-time suggestions** without waiting for retraining.
+- Meanwhile, **GitHub Actions is used to automatically retrain the model daily** with fresh ratings and user data.
+
+--- 
 
 ## 📸 Screenshots
 
@@ -190,9 +245,11 @@ streamlit run frontend/streamlit_app.py
 
 📊 Model evaluation dashboard
 
-🤖 Model Explainability (SHAP, LIME)
+🤖 Natural Language Review Sentiment
 
 🌐 Deploy as a full-stack SaaS product
+
+🤖 Hybrid Recommender Combining All Models
 
 ## ⭐ Support
 If you found this project helpful, consider giving it a ⭐ star on GitHub!
