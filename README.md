@@ -6,6 +6,9 @@ A smart, course recommender built using hybrid collaborative filtering, machine 
 ![Framework](https://img.shields.io/badge/Framework-Streamlit-green)
 <a href="">→Live Demo<a/> 
 ---
+![Alt Text](assets/EDA_1.png)
+
+---
 
 ## 📌 Overview
 
@@ -208,7 +211,7 @@ To handle this efficiently, an **hybrid strategy** combining similarity-based in
 
 | EDA & Similarity Heatmap | KMeans Elbow | Regression Model Results | Classification Model Results |
 |--------------------------|--------------|----------------|----------------|
-| ![](assets/EDA_1.png) | ![](assets/Kmeans_1.png) | ![](assets/Regression_Results_3.png) |  ![](assets/Classification_Result_1.png) |
+| ![](assets/EDA_3.png) | ![](assets/Kmeans_1.png) | ![](assets/Regression_Results_3.png) |  ![](assets/Classification_Result_1.png) |
 | ![](assets/EDA_2.png) | ![](assets/Kmeans_3.png) | ![](assets/Regression_Results_2.png) |  ![](assets/Classification_Result_2.png) |
 
 ---
