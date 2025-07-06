@@ -1,6 +1,6 @@
 # 🎓 Personalized Course Recommendation System
 
-A smart, AI-powered course recommender built using hybrid collaborative filtering, machine learning, and deep learning models — deployed seamlessly with Supabase and Streamlit.
+A smart, Course recommender built using hybrid collaborative filtering, machine learning, and deep learning models — deployed seamlessly with Supabase and Streamlit.
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-yellow?logo=python)
 ![Framework](https://img.shields.io/badge/Framework-Streamlit-green)
