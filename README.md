@@ -1,6 +1,6 @@
 # 🎓 Personalized Course Recommendation System
 
-A smart, Course recommender built using hybrid collaborative filtering, machine learning, and deep learning models — deployed seamlessly with Supabase and Streamlit.
+A smart, course recommender built using hybrid collaborative filtering, machine learning, and deep learning models — deployed seamlessly with Supabase and Streamlit.
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-yellow?logo=python)
 ![Framework](https://img.shields.io/badge/Framework-Streamlit-green)
@@ -100,18 +100,39 @@ Supabase is used for both **database** and **file storage** in this project. Her
 
 ### 🔸 1. Supabase Tables (PostgreSQL)
 
-
 These tables store the core data for user interactions, course metadata, and model tracking.
 
-| Table Name           | Columns                                                                 | Purpose                                                       |
-|----------------------|-------------------------------------------------------------------------|---------------------------------------------------------------|
-| `Ratings`            | `user`, `item`, `rating`                                                | Stores user-course rating data (explicit feedback)            |
-| `Course_Info`        | `COURSE_ID`, `TITLE`, `DESCRIPTION`, ...                                | Metadata for all available courses                            |
-| `Course_BOW`         | `doc_id`, `doc_index`, `token`, `bow`                                   | Bag-of-Words representation for each course                   |
-| `Course Genres`      | `COURSE_ID`, `GENRE_1`, `GENRE_2`, ..., `GENRE_N`                        | Genre encoding for each course (used for content profiling)   |
-| `User_Model_Map`     | `userid`, `model`                                                       | Keeps track of which models a user has trained or used        |
+| Table Name       | Columns                                           | Purpose                                                                                                                                                                                                                     |
+| ---------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Ratings`        | `user`, `item`, `rating`                          | Stores user-course rating data (explicit feedback). When a **new user** registers via Streamlit, their selected courses are immediately inserted into this table.                                                           |
+| `Course_Info`    | `COURSE_ID`, `TITLE`, `DESCRIPTION`, ...          | Metadata for all available courses                                                                                                                                                                                          |
+| `Course_BOW`     | `doc_id`, `doc_index`, `token`, `bow`             | Bag-of-Words representation for each course                                                                                                                                                                                 |
+| `Course Genres`  | `COURSE_ID`, `GENRE_1`, `GENRE_2`, ..., `GENRE_N` | Genre encoding for each course (used for content profiling)                                                                                                                                                                 |
+| `User_Model_Map` | `userid`, `model`                                 | Tracks which models a user has trained or used. When a new user trains a model, an entry is added. If an existing user adds new completed courses, all prior model entries for that user are deleted and must be retrained. |
 
 ---
+
+### 🔁 Data Handling Workflow (CRUD Behavior)
+
+* **Create**:
+
+  * A **new user** submits completed courses → new rows are inserted into `Ratings`.
+  * When that user trains a model → an entry is created in `User_Model_Map`.
+
+* **Read**:
+
+  * The system fetches existing user ratings and model mappings to show previous progress.
+
+* **Update**:
+
+  * If a user adds **additional completed courses**, new rows are inserted into `Ratings`.
+
+* **Delete**:
+
+  * Upon course updates by an existing user, all of their prior model entries in `User_Model_Map` are deleted to ensure models are retrained on updated data.
+
+---
+
 
 ### 🔸 2. Supabase Storage Buckets
 
@@ -121,7 +142,7 @@ Used to upload, store, and download serialized models and other large files.
 |------------------------------|---------------------------------------------------------------|---------------------------------------------|
 | `course-recommendation-models` | `course_similarity_model.xz`<br>`user_profile_matrix.xz`<br>`ncf_model.xz`<br>`kMeans_model.xz`<br>`regression_emb_model.xz` | Stores all trained ML models (Pickle + LZMA) |
 
-Each model file is uploaded or updated after training:
+Each trained model is uploaded to Supabase for existing users, and automatically retrained and updated when a new user is added via the Streamlit interface:
 ```python
 supabase.storage.from_("course-recommendation-models").upload(file_name, file)
 
