@@ -209,7 +209,7 @@ To handle this efficiently, an **hybrid strategy** combining similarity-based in
 
 ## 📸 Screenshots
 
-| EDA | KMeans Elbow | Regression Model Results | Classification Model Results |
+| EDA | K Means | Regression Model Results | Classification Model Results |
 |--------------------------|--------------|----------------|----------------|
 | ![](assets/EDA_3.png) | ![](assets/Kmeans_1.png) | ![](assets/Regression_Results_3.png) |  ![](assets/Classification_Result_1.png) |
 | ![](assets/EDA_2.png) | ![](assets/Kmeans_3.png) | ![](assets/Regression_Results_2.png) |  ![](assets/Classification_Result_2.png) |
