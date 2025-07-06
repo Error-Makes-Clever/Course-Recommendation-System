@@ -29,7 +29,7 @@ All models are trainable and deployable directly from the Streamlit interface, i
 - 🧠 **Clustering with PCA**: Groups similar users for smarter predictions.
 - 📚 **Content-Based Filtering**: Uses course metadata and BOW representations.
 - 🧠 **Regression & Classification Embedding Models**: Generate custom user/item features for improved accuracy.
-- ☁ **Supabase Integration**: Fully managed backend for storing models, ratings, and user data.
+- ☁ **Supabase Integration**: All data (ratings, courses, models, embeddings) is stored, updated, and retrieved from a scalable PostgreSQL backend via Supabase.
 - 📊 **EDA, KMeans Elbow, Similarity Heatmaps, Hyperparameter Tuning**: Visualized and saved as part of analysis.
 
 ---
