@@ -208,9 +208,8 @@ To handle this efficiently, an **hybrid strategy** combining similarity-based in
 
 | EDA & Similarity Heatmap | KMeans Elbow | Regression Model Results | Classification Model Results |
 |--------------------------|--------------|----------------|----------------|
-| ![](assets/EDA_1.png) | ![](assets/Kmeans_1.png) | ![](assets/Regression_Results_1.png) |  ![](assets/Classification_Result_1.png) |
-| ![](assets/EDA_2.png) | ![](assets/Kmeans_2.png) | ![](assets/Regression_Results_2.png) |  ![](assets/Classification_Result_2.png) |
-| ![](assets/EDA_3.png) | ![](assets/Kmeans_3.png) | ![](assets/Regression_Results_3.png) |   ![](assets/Classification_Result_3.png) |
+| ![](assets/EDA_1.png) | ![](assets/Kmeans_1.png) | ![](assets/Regression_Results_3.png) |  ![](assets/Classification_Result_1.png) |
+| ![](assets/EDA_2.png) | ![](assets/Kmeans_3.png) | ![](assets/Regression_Results_2.png) |  ![](assets/Classification_Result_2.png) |
 
 ---
 
