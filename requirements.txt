@@ -5,4 +5,4 @@ scikit-learn==1.4.2
 tensorflow==2.16.1
 python-dotenv==1.0.1
 supabase==2.3.3
-git+https://github.com/rahulbhatia/streamlit-aggrid.git
+streamlit-aggrid==0.3.4.post3
