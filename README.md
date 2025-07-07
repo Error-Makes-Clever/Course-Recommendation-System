@@ -177,35 +177,45 @@ supabase.storage.from_("course-recommendation-models").upload(file_name, file)
 ```
 ---
 
-## 🧊 Cold Start Handling (NCF)
+## 🧊 Cold Start Handling (All Models)
 
-In Neural Collaborative Filtering (NCF), the **cold start problem** refers to the challenge of making recommendations for users who were **not present during model training**.
+In recommendation systems, the **cold start problem** arises when a **new user** has not been seen during model training. This issue affects all trained models, including:
 
-To handle this efficiently, an **hybrid strategy** combining similarity-based inference and scheduled model retraining is adopted:
+* 📊 **Neural Collaborative Filtering (NCF)**
+* 🧩 **Regression with Embedding Features**
+* 🎯 **Classification with Embedding Features**
 
-### 🔁 Strategy
+### 🔁 Hybrid Strategy
 
-1. **Check if the user was trained**:
-   - If the user exists in the training data, we use the NCF model directly to predict recommendations.
+To address this problem, we use a **similarity-based hybrid approach** along with **scheduled retraining**:
 
-2. **If the user is new**:
-   - We collect completed courses from the user.
-   - Calculate **cosine similarity** between the new user and trained users based on course completion.
-   - Select the top K similar users (e.g., 5).
+#### 1. **Check if the user is already trained**:
 
-3. **Generate recommendations**:
-   - Fetch predictions for those similar users using the NCF model.
-   - Weight the predicted scores based on similarity to the new user.
-   - Filter out any courses the new user has already completed.
-   - Scale scores between **0–100** for interpretability.
+* If yes, use the selected model (**NCF**, **Regression**, or **Classification**) to directly predict recommendations.
 
-### 🛠 Why?
+#### 2. **If the user is new**:
 
-- **Training the NCF model is expensive and slow**, especially when users update their history frequently.
-- This cold-start mechanism gives **real-time suggestions** without waiting for retraining.
-- Meanwhile, **GitHub Actions is used to automatically retrain the model daily** with fresh ratings and user data.
+* Collect completed course history for the user.
+* Compute **cosine similarity** between this new user and all trained users.
+* Identify top **K most similar users** (e.g., `k = 5`).
 
---- 
+#### 3. **Generate predictions**:
+
+* Fetch the predicted scores from the selected model for the similar users.
+* Combine these predictions using a **weighted average**, where weights are based on cosine similarity.
+* Exclude courses already completed by the new user.
+* Normalize final scores to a **0–100** scale for easy interpretation.
+
+
+### 🧠 Why This Matters
+
+* Training deep models like **NCF** or embedding-based regressors/classifiers is **resource-intensive**.
+* Real-time updates for each new user are impractical.
+* This approach enables **instant recommendations** even for unseen users.
+* Meanwhile, **GitHub Actions** is configured to **automatically retrain all models daily**, ensuring updated results as new ratings are added.
+
+---
+
 
 ## 📸 Screenshots
 
