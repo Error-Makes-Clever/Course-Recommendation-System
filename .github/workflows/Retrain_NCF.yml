@@ -1,4 +1,4 @@
-name: Retrain NCF Model
+name: Retraining Recommendation Model
 
 on:
   schedule:
@@ -21,7 +21,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r Retraining_Requirements.txt
-    - name: Run NCF Training Script
+    - name: Run Retraining Script
       env:
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
