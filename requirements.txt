@@ -4,5 +4,5 @@ numpy==1.26.4
 scikit-learn==1.4.2
 tensorflow==2.16.1
 python-dotenv==1.0.1
-st-aggrid==0.2.3.post2
+st-aggrid==0.2.2
 supabase==2.3.3
