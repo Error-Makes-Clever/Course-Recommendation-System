@@ -4,7 +4,7 @@ A smart, course recommender built using hybrid collaborative filtering, machine 
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-yellow?logo=python)
 ![Framework](https://img.shields.io/badge/Framework-Streamlit-green)
-<a href="">→Live Demo<a/> 
+<a href="https://personalized-course-recommendation-system.streamlit.app/">→Live Demo<a/> 
 ---
 ![Alt Text](assets/EDA_1.png)
 
