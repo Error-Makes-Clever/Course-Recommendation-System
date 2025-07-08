@@ -230,8 +230,8 @@ To address this problem, we use a **similarity-based hybrid approach** along wit
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/your-username/course-recommendation-system.git
-cd course-recommendation-system
+git clone https://github.com/Error-Makes-Clever/Course-Recommendation-System.git
+cd Course-Recommendation-System
 ```
 ### 2. Create and activate virtual environment
 ```
