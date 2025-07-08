@@ -168,7 +168,7 @@ Used to upload, store, and download serialized models and other large files.
 
 | Bucket Name                  | Files Inside                                                  | Purpose                                     |
 |------------------------------|---------------------------------------------------------------|---------------------------------------------|
-| `course-recommendation-models` | `course_similarity_model.xz`<br>`user_profile_matrix.xz`<br>`ncf_model.xz`<br>`kMeans_model.xz`<br>`regression_emb_model.xz` | Stores all trained ML models (Pickle + LZMA) |
+| `course-recommendation-models` | `course_similarity_model.xz`<br>`user_profile_matrix.xz`<br>`ncf_model.xz`<br>`kMeans_model.xz`<br>`kMeans_PCA_model.xz`<br>`regression_emb_model.xz` | Stores all trained ML models (Pickle + LZMA) |
 
 Each trained model is uploaded to Supabase for existing users, and automatically retrained and updated when a new user is added via the Streamlit interface:
 ```python
@@ -221,8 +221,8 @@ To address this problem, we use a **similarity-based hybrid approach** along wit
 
 | EDA | K Means | Regression Model Results | Classification Model Results |
 |--------------------------|--------------|----------------|----------------|
-| ![](assets/EDA_3.png) | ![](assets/Kmeans_1.png) | ![](assets/Regression_Results_3.png) |  ![](assets/Classification_Result_1.png) |
-| ![](assets/EDA_2.png) | ![](assets/Kmeans_3.png) | ![](assets/Regression_Results_2.png) |  ![](assets/Classification_Result_2.png) |
+| ![](assets/EDA_3.png) Number of Ratings per User| ![](assets/Kmeans_1.png) Elbow Curve| ![](assets/Regression_Results_3.png) Line Plot of MAE and RMSE Across Models|  ![](assets/Classification_Result_1.png) Performance Comparison Across Models (Accuracy, Precision, Recall, F1, AUC)|
+| ![](assets/EDA_2.png) Distribution of Course Genres| ![](assets/Kmeans_3.png) Accumulated Variance Ratio vs Number of PCA Components| ![](assets/Regression_Results_2.png) Evaluation of Regression Models using MAE and RMSE|  ![](assets/Classification_Result_2.png) Line Plot of Accuracy, Precision, and F1 Score Across Models|
 
 ---
 
@@ -250,7 +250,7 @@ SUPABASE_KEY=your_supabase_key
 ```
 ### 5. Run Streamlit app
 ```
-streamlit run frontend/streamlit_app.py
+streamlit run app.py
 
 ```
 
