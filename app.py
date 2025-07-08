@@ -234,7 +234,7 @@ if existing_user == 'Yes' or 'loaded_user' in st.session_state:
 
                     if not prediction_df.empty:
                         st.subheader("🎯 Recommended Courses:")
-                        st.dataframe(prediction_df,use_container_width=True)
+                        st.dataframe(prediction_df, use_container_width=True)
                     else:
                         st.info("No recommendations available or model not ready.")
 
