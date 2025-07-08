@@ -41,7 +41,7 @@ def load_courses():
     with st.spinner("Loading courses from Supabase..."):
         return backend.load_course()
 
-# Load user-model map for a specific user
+# Load user-model map
 
 def load_user_model_map_by_userid(user_id):
     with st.spinner("Loading user model map from Supabase..."):
@@ -49,8 +49,7 @@ def load_user_model_map_by_userid(user_id):
 
 # Load course selector UI using AgGrid
 
-def course_selector(course_df):
-
+def course_selector(course_df, selector_key):
     gb = GridOptionsBuilder.from_dataframe(course_df)
     gb.configure_default_column(enablePivot=True, enableValue=True, enableRowGroup=True)
     gb.configure_selection(selection_mode="multiple", use_checkbox=True)
@@ -60,38 +59,37 @@ def course_selector(course_df):
     response = AgGrid(
         course_df,
         gridOptions=grid_options,
-        enable_enterprise_modules=True,
-        update_mode=GridUpdateMode.MODEL_CHANGED,
+        update_mode=GridUpdateMode.SELECTION_CHANGED,
         data_return_mode=DataReturnMode.FILTERED_AND_SORTED,
-        fit_columns_on_grid_load=False,
+        enable_enterprise_modules=False,
+        fit_columns_on_grid_load=True,
+        key=selector_key,
     )
 
-    results = pd.DataFrame(response["selected_rows"], columns=['COURSE_ID', 'TITLE', 'DESCRIPTION'])
-    results = results[['COURSE_ID', 'TITLE']]
-    return results
+    selected_rows = pd.DataFrame(response.get("selected_rows", []))
 
-# Helper to refresh ratings when needed
+    if not selected_rows.empty and 'COURSE_ID' in selected_rows.columns:
+        return selected_rows[['COURSE_ID', 'TITLE']]
+    else:
+        return pd.DataFrame()
+
+# Refresh helper
 
 def refresh_ratings():
     st.session_state['ratings_df'] = load_ratings()
     st.session_state['data_updated'] = False
 
-# Streamlit page config
+# Streamlit layout
 
-st.set_page_config(
-    page_title="Course Recommender System",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
-
+st.set_page_config(page_title="Course Recommender System", layout="wide", initial_sidebar_state="expanded")
 st.title("🎓 Personalized Course Recommendation System")
 
-# Sidebar options
+# Sidebar user mode
 
 st.sidebar.title('Personalized Learning Recommender')
 existing_user = st.sidebar.selectbox('Are You An Existing User?', ['Yes', 'No'])
 
-# Initial ratings loading
+# Initial ratings
 
 if 'ratings_df' not in st.session_state:
     refresh_ratings()
@@ -99,11 +97,11 @@ if 'ratings_df' not in st.session_state:
 ratings_df = st.session_state['ratings_df']
 course_df = load_courses()
 
-# === NEW USER SECTION ===
+# === NEW USER ===
 
 if existing_user == 'No' and 'loaded_user' not in st.session_state:
     st.subheader("Select courses that you have completed:")
-    selected_courses_df = course_selector(course_df)
+    selected_courses_df = course_selector(course_df, "initial_course_selector")
     submit_new = st.button("Push to Database")
 
     if submit_new:
@@ -128,12 +126,11 @@ if existing_user == 'No' and 'loaded_user' not in st.session_state:
                 st.error("Failed to insert ratings into Supabase.")
                 st.write(insert_response)
 
-# === EXISTING USER SECTION ===
+# === EXISTING USER ===
 
 if existing_user == 'Yes' or 'loaded_user' in st.session_state:
 
     if existing_user == 'Yes':
-
         valid_user_ids = ratings_df['user'].unique()
         user_id = st.sidebar.number_input("Enter Your User ID", min_value=1, step=1)
 
@@ -141,7 +138,7 @@ if existing_user == 'Yes' or 'loaded_user' in st.session_state:
             if st.sidebar.button("Load My Data"):
                 st.session_state['loaded_user'] = int(user_id)
         else:
-            st.sidebar.warning("❌ Invalid User ID. Please enter a valid one.")        
+            st.sidebar.warning("❌ Invalid User ID. Please enter a valid one.")
 
     if 'loaded_user' in st.session_state:
         user_id = st.session_state['loaded_user']
@@ -161,7 +158,7 @@ if existing_user == 'Yes' or 'loaded_user' in st.session_state:
         if selected_action == 'Add Completed Courses':
             new_courses = course_df[~course_df['COURSE_ID'].isin(enrolled_ids)]
             st.subheader("Select additional completed courses:")
-            selected_df = course_selector(new_courses)
+            selected_df = course_selector(new_courses, "additional_course_selector")
             submit_add = st.button("Push Additional Courses")
 
             if submit_add:
@@ -180,7 +177,6 @@ if existing_user == 'Yes' or 'loaded_user' in st.session_state:
 
                         if delete_response.data is not None:
                             st.info("✅ Existing trained models cleared.")
-
                             st.session_state['model_map_df'] = backend.load_user_model_map_by_userid(user_id)
                             st.session_state['last_loaded_user'] = user_id
                         else:
@@ -195,7 +191,7 @@ if existing_user == 'Yes' or 'loaded_user' in st.session_state:
                         st.write(insert_response)
 
         # === MODEL OPTIONS ===
-
+        
         elif selected_action == 'Model Options':
             st.sidebar.markdown("---")
             st.sidebar.subheader("Model Selection")
@@ -234,7 +230,7 @@ if existing_user == 'Yes' or 'loaded_user' in st.session_state:
 
                     if not prediction_df.empty:
                         st.subheader("🎯 Recommended Courses:")
-                        st.dataframe(prediction_df, use_container_width=True)
+                        st.dataframe(prediction_df)
                     else:
                         st.info("No recommendations available or model not ready.")
 
@@ -245,7 +241,6 @@ if existing_user == 'Yes' or 'loaded_user' in st.session_state:
                     placeholder = st.empty()
                     start_time = time.time()
                     with st.spinner(f"🔄 Training {selected_untrained}..."):
-                        
                         if selected_untrained == "Course Similarity":
                             status = backend.course_similarity_train()
                         elif selected_untrained == "User Profile":
@@ -260,16 +255,15 @@ if existing_user == 'Yes' or 'loaded_user' in st.session_state:
                             status = f"🚧 Training logic not implemented yet for {selected_untrained}"
 
                     end_time = time.time()
-                    total_seconds = round(end_time - start_time)
-                    mins, secs = divmod(total_seconds, 60)
+                    mins, secs = divmod(round(end_time - start_time), 60)
                     placeholder.success(f"{status} (⏱️ {mins} min {secs} sec)")
-                    
+
                     if status.startswith("✅"):
                         supabase.table("User_Model_Map").insert({"userid": int(user_id), "model": selected_untrained}).execute()
                         st.session_state['data_updated'] = True
-                        time.sleep(2)  
+                        time.sleep(2)
                         st.rerun()
                     else:
                         time.sleep(2)
 
-        st.subheader("\U0001F3AF Use the sidebar to enter your courses, train your model, and view personalized recommendations.")
+        st.subheader("🎯 Use the sidebar to enter your courses, train your model, and view personalized recommendations.")
