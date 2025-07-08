@@ -18,7 +18,6 @@ supabase = create_client(url, key)
 
 
 def load_rating(batch_size=1000):
-
     response = supabase.table("Ratings").select("user", count="exact").execute()
     total_rows = response.count
 
@@ -30,9 +29,25 @@ def load_rating(batch_size=1000):
         if batch_response.data:
             all_data.extend(batch_response.data)
         else:
-            break 
+            break
 
     df = pd.DataFrame(all_data)
+
+    if not df.empty:
+        if 'id' in df.columns:
+            df = df.sort_values(by='id')
+        df['dup_key'] = df['user'].astype(str) + '_' + df['item'].astype(str)
+
+        to_keep = df.drop_duplicates(subset=['dup_key'], keep='first')
+
+        to_delete_df = df[~df.index.isin(to_keep.index)]
+
+        if not to_delete_df.empty:
+            for _, row in to_delete_df.iterrows():
+                supabase.table("Ratings").delete().eq('user', row['user']).eq('item', row['item']).execute()
+
+        df = to_keep.drop(columns='dup_key')
+
     return df
 
 # ======= Neural Collaborative Filtering =======
