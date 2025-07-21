@@ -236,17 +236,6 @@ def emb_create(n_user, n_item, n_user_latent_dim: int = 16, n_item_latent_dim: i
                     embeddings_initializer="he_normal",
                     embeddings_regularizer=keras.regularizers.l2(reg_users)
                     )(user_input)
-    
-    user_vec = keras.layers.Flatten(name='user_flat')(user_embedding)
-
-    user_bias = keras.layers.Embedding(input_dim=n_user,
-                    output_dim=1,
-                    name='user_bias',
-                    embeddings_initializer="he_normal",
-                    embeddings_regularizer=keras.regularizers.l2(reg_users)
-                    )(user_input)
-    
-    user_model = keras.models.Model(inputs=user_input, outputs=user_vec)
 
     # ITEM
     item_embedding = keras.layers.Embedding(input_dim=n_item,
@@ -254,13 +243,6 @@ def emb_create(n_user, n_item, n_user_latent_dim: int = 16, n_item_latent_dim: i
                     name='item_embedding',
                     embeddings_initializer="he_normal",
                     embeddings_regularizer=keras.regularizers.l2(reg_items)
-                    )(item_input)
-
-    item_bias = keras.layers.Embedding(input_dim=n_user,
-                    output_dim=1,
-                    name='item_bias',
-                    embeddings_initializer="he_normal",
-                    embeddings_regularizer=keras.regularizers.l2(reg_users)
                     )(item_input)
 
     merged = keras.layers.Dot(name='dot', normalize=True, axes=1)([user_embedding, item_embedding])
