@@ -61,10 +61,21 @@ def load_user_model_map_by_userid(user_id):
 # Load course selector UI using AgGrid
 
 def course_selector(course_df, selector_key):
+    # Always keep an unmodified copy of the original data
+    original_df = course_df.copy()
+
+    # Search box for filtering
+    search_query = st.text_input("🔍 Search Courses", key=f"search_{selector_key}")
+    if search_query:
+        course_df = original_df[
+            original_df.apply(lambda row: row.astype(str).str.contains(search_query, case=False, na=False).any(), axis=1)
+        ]
+
     gb = GridOptionsBuilder.from_dataframe(course_df)
     gb.configure_default_column(enablePivot=True, enableValue=True, enableRowGroup=True)
     gb.configure_selection(selection_mode="multiple", use_checkbox=True)
     gb.configure_side_bar()
+
     grid_options = gb.build()
 
     response = AgGrid(
@@ -110,6 +121,16 @@ course_df = load_courses()
 
 # === NEW USER ===
 
+if 'new_user_id' in st.session_state and existing_user == 'No':
+    st.sidebar.markdown(
+        f"""
+        <div style="background-color:#d4edda; padding:8px; border-radius:5px; color:#155724; font-weight:bold;">
+            🆕 Your User ID: {st.session_state['new_user_id']}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
 if existing_user == 'No' and 'loaded_user' not in st.session_state:
     st.subheader("Select courses that you have completed:")
     selected_courses_df = course_selector(course_df, "initial_course_selector")
@@ -128,7 +149,7 @@ if existing_user == 'No' and 'loaded_user' not in st.session_state:
                 insert_response = supabase.table("Ratings").insert(new_rows).execute()
 
             if insert_response.data is not None:
-                st.success(f"Successfully added ratings for new user ID {new_user_id}")
+                st.session_state['new_user_id'] = int(new_user_id)
                 st.session_state['loaded_user'] = new_user_id
                 st.session_state['data_updated'] = True
                 refresh_ratings()
@@ -144,6 +165,7 @@ if existing_user == 'Yes' or 'loaded_user' in st.session_state:
     if existing_user == 'Yes':
         valid_user_ids = ratings_df['user'].unique()
         user_id = st.sidebar.number_input("Enter Your User ID", min_value=1, step=1)
+        st.sidebar.caption("💡 Your User ID should be in the format **2103XXX**")
 
         if user_id in valid_user_ids:
             if st.sidebar.button("Load My Data"):
@@ -200,6 +222,11 @@ if existing_user == 'Yes' or 'loaded_user' in st.session_state:
                     else:
                         st.error("Failed to insert additional ratings.")
                         st.write(insert_response)
+
+            # === RESET APP ===
+            if st.sidebar.button("🔄 Reset App"):
+                st.session_state.clear()
+                st.rerun()
 
         # === MODEL OPTIONS ===
         
@@ -282,6 +309,23 @@ if existing_user == 'Yes' or 'loaded_user' in st.session_state:
                     else:
                         time.sleep(2)
 
+            st.markdown("---")
+            st.subheader("ℹ️ Model Descriptions")
+            st.markdown(f"""
+            - **Course Similarity**: Recommendations based on **Genre similarity** between courses.  
+            - **User Profile**: Matches courses to your profile based on your past preferences.  
+            - **Clustering**: Groups similar users together and recommends what users in your cluster liked.  
+            - **Clustering with PCA**: Same as Clustering but with **dimensionality reduction** for better performance.  
+            - **Neural Network**: Learns patterns from the **course descriptions** to recommend similar content.  
+            - **Regression with Embedding Features** – Predicts the **likelihood score** of you completing a course, based on historical user-course interactions.  
+            - **Classification with Embedding Features** – Predicts a **Yes/No outcome** for whether you are likely to complete a course.  
+            """
+            )
+
+            # === RESET APP ===
+            st.sidebar.markdown("---")
+            if st.sidebar.button("🔄 Reset App"):
+                st.session_state.clear()
+                st.rerun()
+
         st.subheader("🎯 Use the sidebar to enter your courses, train your model, and view personalized recommendations.")
-
-
