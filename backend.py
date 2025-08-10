@@ -847,4 +847,3 @@ def Embedding_Predict(User_ID, model_name, n_rec=10):
         r = {course_id: round(scale(score, max_score, min_score), 2) for course_id, score in sorted_courses[:n_rec]}
 
         return recommended_courses(r)
-
