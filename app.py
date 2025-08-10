@@ -31,10 +31,6 @@ models = (
 
 # Load ratings from backend
 
-import time
-import httpx
-import streamlit as st
-
 def load_ratings(max_retries=3, delay=2):
     for attempt in range(max_retries):
         try:
@@ -226,9 +222,11 @@ if existing_user == 'Yes' or 'loaded_user' in st.session_state:
 
             if trained_models:
                 st.sidebar.markdown("**Trained Models**")
-                selected_trained = st.sidebar.radio("Select Trained Model to Predict:", trained_models, key=f"trained_model_radio_{user_id}")
-                if selected_trained and st.sidebar.button("Predict", key=f"predict_btn_{user_id}"):
-                    with st.spinner(f"🔍 Predicting with {selected_trained}..."):
+                selected_trained = st.sidebar.radio("Select Trained Model for Recommendations:", trained_models, key=f"trained_model_radio_{user_id}")
+                if selected_trained and st.sidebar.button("Get Recommendations", key=f"predict_btn_{user_id}"):
+                    placeholder = st.empty()
+                    start_time = time.time()
+                    with st.spinner(f"🎯 Generating recommendations with {selected_trained}..."):
                         if selected_trained == "Course Similarity":
                             prediction_df = backend.course_similarity_predict(user_id)
                         elif selected_trained == "User Profile":
@@ -243,7 +241,10 @@ if existing_user == 'Yes' or 'loaded_user' in st.session_state:
                             prediction_df = pd.DataFrame()
                             st.warning(f"🚧 Prediction logic not implemented yet for {selected_trained}")
 
+                    end_time = time.time()
+                    mins, secs = divmod(round(end_time - start_time), 60)
                     if not prediction_df.empty:
+                        placeholder.success(f"🎯 Recommendations ready! (⏱️ {mins} min {secs} sec)")
                         st.subheader("🎯 Recommended Courses:")
                         st.dataframe(prediction_df)
                     else:
@@ -282,4 +283,5 @@ if existing_user == 'Yes' or 'loaded_user' in st.session_state:
                         time.sleep(2)
 
         st.subheader("🎯 Use the sidebar to enter your courses, train your model, and view personalized recommendations.")
+
 
