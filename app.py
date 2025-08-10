@@ -4,6 +4,7 @@ from st_aggrid import AgGrid
 from st_aggrid.grid_options_builder import GridOptionsBuilder
 from st_aggrid import GridUpdateMode, DataReturnMode
 import time
+import httpx
 import os
 from dotenv import load_dotenv
 from supabase import create_client
@@ -30,10 +31,24 @@ models = (
 
 # Load ratings from backend
 
-def load_ratings():
-    with st.spinner("Loading ratings from Supabase..."):
-        return backend.load_rating()
+import time
+import httpx
+import streamlit as st
 
+def load_ratings(max_retries=3, delay=2):
+    for attempt in range(max_retries):
+        try:
+            with st.spinner("Loading ratings from Supabase..."):
+                return backend.load_rating()
+        except httpx.RemoteProtocolError as e:
+            st.warning(f"Connection error, retrying... ({attempt+1}/{max_retries})")
+            time.sleep(delay)
+        except Exception as e:
+            st.error(f"Unexpected error: {e}")
+            time.sleep(delay)
+    st.error("Failed to load ratings after multiple retries.")
+    return None
+    
 # Load courses from backend
 
 @st.cache_data
@@ -267,3 +282,4 @@ if existing_user == 'Yes' or 'loaded_user' in st.session_state:
                         time.sleep(2)
 
         st.subheader("🎯 Use the sidebar to enter your courses, train your model, and view personalized recommendations.")
+
