@@ -1,10 +1,11 @@
 streamlit
 pandas
 numpy
+streamlit-aggrid
+python-dotenv
+supabase
 scikit-learn
 tensorflow
-python-dotenv
 supabase
 gotrue
 rich
-streamlit-aggrid
