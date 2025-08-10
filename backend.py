@@ -14,6 +14,7 @@ from sklearn.cluster import KMeans
 from supabase import create_client
 import sklearn
 import time
+import httpx
 import tensorflow as tf
 from tensorflow import keras
 
@@ -25,16 +26,30 @@ url = os.getenv('SUPABASE_URL')
 key = os.getenv('SUPABASE_KEY')
 supabase = create_client(url, key)
 
-# Function for loading rating data
+def safe_execute(query, retries=3, delay=2):
+    """Execute a Supabase query with retry on network errors."""
+    for attempt in range(retries):
+        try:
+            return query.execute()
+        except httpx.RemoteProtocolError:
+            print(f"RemoteProtocolError, retrying ({attempt+1}/{retries})...")
+            time.sleep(delay)
+        except Exception as e:
+            print(f"Error: {e}, retrying ({attempt+1}/{retries})...")
+            time.sleep(delay)
+    raise Exception("Failed after multiple retries.")
 
 def load_rating(batch_size=1000):
-    response = supabase.table("Ratings").select("user", count="exact").execute()
+    # Get total row count
+    response = safe_execute(supabase.table("Ratings").select("user", count="exact"))
     total_rows = response.count
 
     all_data = []
     for start in range(0, total_rows, batch_size):
         end = min(start + batch_size - 1, total_rows - 1)
-        batch_response = supabase.table("Ratings").select("*").range(start, end).execute()
+        batch_response = safe_execute(
+            supabase.table("Ratings").select("*").range(start, end)
+        )
         
         if batch_response.data:
             all_data.extend(batch_response.data)
@@ -54,7 +69,12 @@ def load_rating(batch_size=1000):
 
         if not to_delete_df.empty:
             for _, row in to_delete_df.iterrows():
-                supabase.table("Ratings").delete().eq('user', row['user']).eq('item', row['item']).execute()
+                safe_execute(
+                    supabase.table("Ratings")
+                    .delete()
+                    .eq('user', row['user'])
+                    .eq('item', row['item'])
+                )
 
         df = to_keep.drop(columns='dup_key')
 
@@ -827,3 +847,4 @@ def Embedding_Predict(User_ID, model_name, n_rec=10):
         r = {course_id: round(scale(score, max_score, min_score), 2) for course_id, score in sorted_courses[:n_rec]}
 
         return recommended_courses(r)
+
